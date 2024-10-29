@@ -13,7 +13,7 @@
 
 module Specialist
 (
-   input         CLOCK_27,  // Input clock 27 MHz
+   input         CLOCK_50,  // Input clock 27 MHz
 
    output  [5:0] VGA_R,
    output  [5:0] VGA_G,
@@ -61,6 +61,7 @@ localparam CONF_STR =
 	"V0,v2.20.",`BUILD_DATE
 };
 
+assign SDRAM_CLK = ~SDRAM_CLK;
 
 ///////////////////   ARM I/O   //////////////////
 wire [31:0] status;
@@ -115,7 +116,7 @@ mist_io #(.STRLEN($size(CONF_STR)>>3)) mist_io
 wire locked;
 pll pll
 (
-	.inclk0(CLOCK_27),
+	.inclk0(CLOCK_50),
 	.locked(locked),
 	.c0(clk_sys),
 	.c1(SDRAM_CLK)
