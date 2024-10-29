@@ -25,6 +25,10 @@ module Specialist
 
    output        AUDIO_L,
    output        AUDIO_R,
+	
+	output        I2S_BCK,
+	output        I2S_LRCK,
+	output        I2S_DATA,
 
    input         SPI_SCK,
    output        SPI_DO,
@@ -317,7 +321,6 @@ always @(posedge clk_sys) begin
 	if(~old_key & color_key) bw_mode <= ~bw_mode;
 end
 
-
 //////////////////   KEYBOARD   ///////////////////
 wire  [5:0] row_in;
 wire [11:0] col_out;
@@ -378,8 +381,14 @@ k580vv55 ppi2
 
 ////////////////////   SOUND   ////////////////////
 reg spk_out;
-assign AUDIO_R = (pit_out[0] | pit_o[2]) & ~spk_out;
-assign AUDIO_L = AUDIO_R;
+wire [10:0] audio_l; 
+wire [10:0] audio_r; 
+
+assign audio_l = audio_r;
+assign audio_r ={16{(pit_out[0] | pit_o[2]) & ~spk_out}};
+
+wire [15:0] DAC_L = {audio_l, 5'd0} << 6; // Amplify
+wire [15:0] DAC_R = {audio_r, 5'd0} << 6; // Amplify 
 
 wire [7:0] pit_o;
 wire [2:0] pit_out;
@@ -397,6 +406,17 @@ k580vi53 pit
 	.dout(pit_o),
 	.gate(3'b111),
 	.out(pit_out)
+);
+
+i2s i2s (
+	.reset(reset),
+	.clk(clk_sys),
+	.clk_rate(32'd96_000_000), // 96MHz
+	.sclk(I2S_BCK),
+	.lrclk(I2S_LRCK),
+	.sdata(I2S_DATA),
+	.left_chan(DAC_L),
+	.right_chan(DAC_R)
 );
 
 
